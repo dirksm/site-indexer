@@ -1,3 +1,3 @@
-# webcrawler
-Java Web Crawler
+# site-indexer
+Java Site Indexer
 
