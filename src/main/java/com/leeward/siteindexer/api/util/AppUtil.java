@@ -18,7 +18,7 @@ public class AppUtil {
 			   matcher.appendReplacement(sb, prepHelper.getParameter(indx++));
 		   }
 		   matcher.appendTail(sb);
-		   log.debug("Executing Query [" + sb.toString() + "]");
+		   log.trace("Executing Query [" + sb.toString() + "]");
 		   } catch (Exception ex) {
 		    log.trace("Executing Query [" + sql + "]");
 		}
