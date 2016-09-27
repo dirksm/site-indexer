@@ -1,1 +1,0 @@
-{"virtualbox":{"/vagrant/sql":{"owner":"vagrant","group":"vagrant","guestpath":"/vagrant/sql","hostpath":"C:/Users/Mary/git/site-indexer/sql","disabled":false,"__vagrantfile":true},"/vagrant":{"guestpath":"/vagrant","hostpath":"C:/Users/Mary/git/site-indexer","disabled":false,"__vagrantfile":true}}}
