@@ -42,10 +42,10 @@ public class DBUtil {
 	}
 	
 	private static ConnectionInfoModel getConnectionInfo() {
-		String username = ConfigManager.getString("db.username", "");
-		String password = ConfigManager.getString("db.password", "");
-		String url = ConfigManager.getString("db.url", "");
-		String driver = ConfigManager.getString("db.driver", "");
+		String username = PropertyConfigManager.getString("db.username", "");
+		String password = PropertyConfigManager.getString("db.password", "");
+		String url = PropertyConfigManager.getString("db.url", "");
+		String driver = PropertyConfigManager.getString("db.driver", "");
 		return new ConnectionInfoModel(url, username, password, driver);
 	}
 	

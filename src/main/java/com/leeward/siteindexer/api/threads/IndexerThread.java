@@ -45,7 +45,7 @@ public class IndexerThread implements Runnable {
 	@Override
 	public void run() {
 		long s = System.currentTimeMillis();
-		log.debug("Indexing urls");
+		log.info("Indexing urls");
 		String currentUrl = this.prefix;
 		try {
 	        crawl(currentUrl);
@@ -60,7 +60,7 @@ public class IndexerThread implements Runnable {
 		} catch (Exception e) {
 			log.error("Exception searching pages: " + e.getMessage(), e);
 		}
-		log.debug("finished indexing... took " + (System.currentTimeMillis()-s) + "ms to complete.");
+		log.info("finished indexing... took " + (System.currentTimeMillis()-s) + "ms to complete.");
 	}
 	
 	private void crawl(String url) throws IOException {
