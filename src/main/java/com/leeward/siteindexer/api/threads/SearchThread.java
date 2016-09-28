@@ -49,10 +49,11 @@ public class SearchThread implements Runnable {
 					Connection connection = Jsoup.connect(url).userAgent(AppConstants.USER_AGENT);
 			        Document htmlDocument = connection.get();
 			        Response resp = connection.response();
+			        log.debug("response code: " + resp.statusCode() + "; content-type: " + resp.contentType());
 			        if(resp.statusCode() == 200 && resp.contentType().contains("text/html"))
 			        {
 			        	srm = searchPage(url, htmlDocument);
-			        	if (srm != null) {
+			        	if (srm != null && StringUtils.isNotBlank(srm.getText())) {
 			        		dao.addSitepages(srm);
 						}
 			        }
