@@ -48,10 +48,13 @@ public class SearchThread implements Runnable {
 						break;
 					}
 					log.debug("Retrieving url '"+url+"'");
+					Connection connection = null;
+			        Document htmlDocument = null;
+			        Response resp = null;
 					try {
-						Connection connection = Jsoup.connect(url).userAgent(AppConstants.USER_AGENT);
-				        Document htmlDocument = connection.get();
-				        Response resp = connection.response();
+						connection = Jsoup.connect(url).userAgent(AppConstants.USER_AGENT);
+				        htmlDocument = connection.get();
+				        resp = connection.response();
 				        log.debug("response code: " + resp.statusCode() + "; content-type: " + resp.contentType());
 				        if(resp.statusCode() == 200 && resp.contentType().contains("text/html"))
 				        {
@@ -61,7 +64,8 @@ public class SearchThread implements Runnable {
 							}
 				        }
 					} catch (UnsupportedMimeTypeException umte) {
-						
+						log.error("url: " + umte.getMessage(), umte);
+						log.error(resp.contentType());
 					} catch (SocketTimeoutException ste) {
 						log.error("Exception connecting to '"+url+"': " + ste.getMessage(),ste);
 					}

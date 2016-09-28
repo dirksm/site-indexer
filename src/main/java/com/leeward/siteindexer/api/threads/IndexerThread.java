@@ -48,6 +48,7 @@ public class IndexerThread implements Runnable {
 		log.info("Indexing urls");
 		String currentUrl = this.prefix;
 		try {
+			this.queue.offer(currentUrl);
 	        crawl(currentUrl);
 	        while (!this.urls.isEmpty()) {
 				currentUrl = this.urls.poll();
@@ -64,17 +65,20 @@ public class IndexerThread implements Runnable {
 	}
 	
 	private void crawl(String url) throws IOException {
+		Connection connection = null;
+        Document htmlDocument = null;
+        Response resp = null;
 		try {
-			Connection connection = Jsoup.connect(url).userAgent(AppConstants.USER_AGENT);
-	        Document htmlDocument = connection.get();
-	        Response resp = connection.response();
-	        log.debug("response code: " + resp.statusCode() + "; content-type: " + resp.contentType());
+			connection = Jsoup.connect(url).userAgent(AppConstants.USER_AGENT);
+	        htmlDocument = connection.get();
+	        resp = connection.response();
+	        log.debug("response code for ["+url+"]: " + resp.statusCode() + "; content-type: " + resp.contentType());
 	        if(resp.statusCode() == 200 && resp.contentType().contains("text/html"))
 	        {
 	        	populateURLs(htmlDocument);
 	        }
 		} catch (UnsupportedMimeTypeException umte) {
-			
+			log.error(resp.contentType());
 		} catch (SocketTimeoutException ste) {
 			log.error("Exception connecting to '"+url+"': " + ste.getMessage(),ste);
 		} catch (Exception e) {
