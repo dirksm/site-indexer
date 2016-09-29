@@ -24,4 +24,8 @@ public class AppUtil {
 		}
 	}
 
+	public static boolean isMicrosoftFile(String url) {
+		return url.endsWith(".doc") || url.endsWith(".docx") || url.endsWith(".xls") || url.endsWith(".xlsx") || url.endsWith(".ppt") || url.endsWith(".pptx");
+	}
+	
 }

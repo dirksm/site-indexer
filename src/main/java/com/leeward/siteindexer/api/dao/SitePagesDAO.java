@@ -76,6 +76,27 @@ public class SitePagesDAO implements DBConstants {
 		return numRows;
 	}
 
+	public List<String> getSiteUrls() {
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		List<String> list = new ArrayList<String>();
+		String sqlString = "select distinct site_url from " + SITEPAGES;
+		try {
+			conn = DBUtil.getConnection();
+			pstmt = conn.prepareStatement(sqlString);
+			PreparedStatementHelper prepHelper = new PreparedStatementHelper(pstmt);
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				list.add(rs.getString("site_url"));
+			}
+		} catch (Exception e) {
+			log.error("Exception getting record:  " + e.getMessage());
+		} finally {
+			DBUtil.returnObjects(pstmt, rs, conn);
+		}
+		return list;
+	}
+	
 	public SitePagesModel getSitepages(SitePagesModel bean) {
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;

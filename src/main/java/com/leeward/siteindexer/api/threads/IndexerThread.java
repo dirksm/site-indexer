@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.leeward.siteindexer.api.constants.AppConstants;
 import com.leeward.siteindexer.api.models.URLArrayBlockingQueue;
+import com.leeward.siteindexer.api.util.AppUtil;
 
 public class IndexerThread implements Runnable {
 
@@ -68,21 +69,24 @@ public class IndexerThread implements Runnable {
 		Connection connection = null;
         Document htmlDocument = null;
         Response resp = null;
-		try {
-			connection = Jsoup.connect(url).userAgent(AppConstants.USER_AGENT);
-	        htmlDocument = connection.get();
-	        resp = connection.response();
-	        log.debug("response code for ["+url+"]: " + resp.statusCode() + "; content-type: " + resp.contentType());
-	        if(resp.statusCode() == 200 && resp.contentType().contains("text/html"))
-	        {
-	        	populateURLs(htmlDocument);
-	        }
-		} catch (UnsupportedMimeTypeException umte) {
-			log.error(resp.contentType());
-		} catch (SocketTimeoutException ste) {
-			log.error("Exception connecting to '"+url+"': " + ste.getMessage(),ste);
-		} catch (Exception e) {
-			log.error("Exception crawling url '"+url+"': "+e.getMessage(),e);
+        if (AppUtil.isMicrosoftFile(url) || url.endsWith(".pdf")) {
+        	this.queue.offer(url);
+		} else {
+			try {
+				connection = Jsoup.connect(url).userAgent(AppConstants.USER_AGENT);
+		        htmlDocument = connection.get();
+		        resp = connection.response();
+		        if(resp.statusCode() == 200 && resp.contentType().contains("text/html"))
+		        {
+		        	populateURLs(htmlDocument);
+		        }
+			} catch (UnsupportedMimeTypeException umte) {
+				log.error("url["+url+"]: " + umte.getMessage(), umte);
+			} catch (SocketTimeoutException ste) {
+				log.error("Exception connecting to '"+url+"': " + ste.getMessage(),ste);
+			} catch (Exception e) {
+				log.error("Exception crawling url '"+url+"': "+e.getMessage(),e);
+			}
 		}
 	}
 
