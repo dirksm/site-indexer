@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.leeward.siteindexer.api.constants.AppConstants;
 import com.leeward.siteindexer.api.dao.SitePagesDAO;
+import com.leeward.siteindexer.api.models.DocumentModel;
 import com.leeward.siteindexer.api.models.SitePagesModel;
 import com.leeward.siteindexer.api.models.URLArrayBlockingQueue;
 import com.leeward.siteindexer.api.util.AppUtil;
@@ -101,7 +102,7 @@ public class SearchThread implements Runnable {
 		} catch (Exception e) {
 			log.error("Exception crawling url '"+url+"': "+e.getMessage(),e);
 		}
-		log.debug("finished search... took " + (System.currentTimeMillis()-s) + "ms to complete.");
+		log.info("finished search... took " + (System.currentTimeMillis()-s) + "ms to complete.");
 	}
 
 	private SitePagesModel searchPage(String url, Document htmlDocument) {
@@ -116,8 +117,9 @@ public class SearchThread implements Runnable {
 		return result;
 	}
 	
-	public String parsePdfFile(String url) {
+	public DocumentModel parsePdfFile(String url) {
         String content = "";
+        String title = "";
         COSDocument cd = null;
         try {
             URL uri = new URL(url);
@@ -127,6 +129,7 @@ public class SearchThread implements Runnable {
             cd = parser.getDocument();
             PDDocumentInformation info = parser.getPDDocument().getDocumentInformation();
             log.debug("pdf title: "+info.getTitle());
+            title = info.getTitle();
             PDFTextStripper stripper = new PDFTextStripper();
             content = stripper.getText(new PDDocument(cd));
 		} catch (IOException ioe) {
@@ -137,22 +140,25 @@ public class SearchThread implements Runnable {
 				try {
 					cd.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 				}
 			}
 		}
         content = StringUtils.replace(content, "\n", " ");
-        return content;
+        DocumentModel dm = new DocumentModel();
+        dm.setContent(content);
+        dm.setTitle(title);
+        return dm;
     }
 	
 	private SitePagesModel searchPdf(String url) throws IOException {
 		String title = url.substring(url.lastIndexOf("/")+1, url.length());
 		log.debug("searching pdf at url ["+url+"] and title ["+title+"]");
 		SitePagesModel result = new SitePagesModel();
+		DocumentModel dm = parsePdfFile(url);
     	result.setSiteUrl(this.siteName);
-    	result.setTitle(title);
+    	result.setTitle(StringUtils.isNotBlank(dm.getTitle())?dm.getTitle():title);
     	result.setPageUrl(url);
-    	result.setText(parsePdfFile(url));
+    	result.setText(dm.getContent());
     	return result;
 	}
 	
@@ -161,15 +167,16 @@ public class SearchThread implements Runnable {
 		String title = url.substring(url.lastIndexOf("/")+1, url.length());
 		log.debug("searching microsoft file at url ["+url+"] and title ["+title+"]");
 		SitePagesModel result = new SitePagesModel();
+		DocumentModel dm = parseMicrosoftFile(url);
     	result.setSiteUrl(this.siteName);
-    	result.setTitle(title);
+    	result.setTitle(StringUtils.isNotBlank(dm.getTitle())?dm.getTitle():title);
     	result.setPageUrl(url);
-    	result.setText(parseMicrosoftFile(url));
+    	result.setText(dm.getContent());
     	return result;
 	}
 	
-	private String parseMicrosoftFile(String url) {
-		String content = "";
+	private DocumentModel parseMicrosoftFile(String url) {
+        DocumentModel dm = new DocumentModel();
 		try {
 	        URL uri = new URL(url);
 	        BufferedInputStream bi = new BufferedInputStream(uri.openStream());
@@ -177,37 +184,44 @@ public class SearchThread implements Runnable {
 			if (url.endsWith(".xls")) { //if the file is excel file
 				fs = new POIFSFileSystem(bi);
 	            ExcelExtractor ex = new ExcelExtractor(fs);
-	            content =  ex.getText(); //returns text of the excel file
+	            dm.setContent(StringUtils.replace(ex.getText(), "\n", " "));
+	            dm.setTitle(ex.getSummaryInformation().getTitle());
 	        } else if (url.endsWith(".ppt")) { //if the file is power point file
 				fs = new POIFSFileSystem(bi);
 	            PowerPointExtractor extractor = new PowerPointExtractor(fs);
-	            content =  extractor.getText(); //returns text of the power point file
+	            dm.setContent(StringUtils.replace(extractor.getText(), "\n", " "));
+	            dm.setTitle(extractor.getSummaryInformation().getTitle());
 	        } else if (url.endsWith(".doc")) {
 				fs = new POIFSFileSystem(bi);
 	            HWPFDocument doc = new HWPFDocument(fs);
 	            WordExtractor we = new WordExtractor(doc);
-	            content = we.getText();//if the extension is .doc
+	            dm.setContent(StringUtils.replace(we.getText(), "\n", " "));
+	            dm.setTitle(we.getSummaryInformation().getTitle());
 	        } else if (url.endsWith(".docx")) {
 	        	OPCPackage d = OPCPackage.open(bi);
 	            XParsers xp = new XParsers();
-	            content = xp.docFileContentParser(d);
+	            xp.docFileContentParser(d);
+	            dm.setContent(xp.getContent());
+	            dm.setTitle(xp.getTitle());
 	        } else if (url.endsWith(".xlsx")) {
 	        	OPCPackage d = OPCPackage.open(bi);
 	            XParsers xp = new XParsers();
-	            content = xp.excelContentParser(d);
+	            xp.excelContentParser(d);
+	            dm.setContent(xp.getContent());
+	            dm.setTitle(xp.getTitle());
 	        } else if (url.endsWith(".pptx")) {
 	        	OPCPackage d = OPCPackage.open(bi);
 	            XParsers xp = new XParsers();
-	            content = xp.ppFileContentParser(d);
+	            xp.ppFileContentParser(d);
+	            dm.setContent(xp.getContent());
+	            dm.setTitle(xp.getTitle());
 	        } 
 		} catch (IOException ioe) {
 			log.error("Error parsing ["+url+"]: "+ ioe.getMessage(),ioe);
-			content = "";
 		} catch (Exception e) {
 			log.error("Error parsing ["+url+"]: "+ e.getMessage(),e);
-			content = "";
 		}
-		content = StringUtils.replace(content, "\n", " ");
-		return content;
+		dm.setContent(StringUtils.replace(dm.getContent(), "\n", " "));
+		return dm;
 	}
 }

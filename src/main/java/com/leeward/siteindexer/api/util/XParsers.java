@@ -1,12 +1,11 @@
 package com.leeward.siteindexer.api.util;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
@@ -18,6 +17,9 @@ import org.xml.sax.SAXException;
 
 public class XParsers {
 
+	private String content;
+	private String title;
+	
 	/**
      * This method parses the .docx files.
      *
@@ -30,7 +32,7 @@ public class XParsers {
      * @throws ParserConfigurationException
      * @throws SAXException
      */
-    public String docFileContentParser(OPCPackage docx) throws FileNotFoundException,
+    public void docFileContentParser(OPCPackage docx) throws FileNotFoundException,
             IOException,
             XmlException,
             InvalidFormatException,
@@ -38,7 +40,8 @@ public class XParsers {
             ParserConfigurationException,
             SAXException {
         XWPFWordExtractor xw = new XWPFWordExtractor(docx);
-        return xw.getText();
+        this.content = StringUtils.replace(xw.getText(), "\n", " ");
+        this.title = xw.getCoreProperties().getTitle();
     }
 
     /**
@@ -51,13 +54,14 @@ public class XParsers {
      * @throws XmlException
      * @throws OpenXML4JException
      */
-    public String ppFileContentParser(OPCPackage pptx) throws FileNotFoundException,
+    public void ppFileContentParser(OPCPackage pptx) throws FileNotFoundException,
             IOException,
             InvalidFormatException,
             XmlException,
             OpenXML4JException {
         XSLFPowerPointExtractor xw = new XSLFPowerPointExtractor(pptx);
-        return xw.getText();
+        this.content = StringUtils.replace(xw.getText(), "\n", " ");
+        this.title = xw.getCoreProperties().getTitle();
     }
 
     /**
@@ -70,12 +74,29 @@ public class XParsers {
      * @throws XmlException
      * @throws OpenXML4JException
      */
-    public String excelContentParser(OPCPackage xlsx) throws FileNotFoundException,
+    public void excelContentParser(OPCPackage xlsx) throws FileNotFoundException,
             IOException,
             InvalidFormatException,
             XmlException,
             OpenXML4JException {
         XSSFExcelExtractor xe = new XSSFExcelExtractor(xlsx);
-        return xe.getText();
-    }    
+        this.content = StringUtils.replace(xe.getText(), "\n", " ");
+        this.title = xe.getCoreProperties().getTitle();
+    }
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}    
 }
