@@ -1,9 +1,15 @@
 package com.leeward.siteindexer.api.services;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.jsoup.Connection;
+import org.jsoup.Connection.Response;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,10 +27,15 @@ public class SiteIndexService {
 	URLArrayBlockingQueue<String> urls = null;
 	URLArrayBlockingQueue<String> inurls = null;
 	private String siteName = "";
+	private String url = "";
+	private String protocol = "";
 	
-	public SiteIndexService(String siteName) {
+	public SiteIndexService(String url) {
 		super();
-		this.siteName = siteName;
+		this.url = url;
+		URL u = getURL(this.url);
+		this.siteName = u.getHost();
+		this.protocol = u.getProtocol();
 	}
 	
 	public int execute() {
@@ -36,10 +47,10 @@ public class SiteIndexService {
 			
 			SitePagesDAO dao = new SitePagesDAO();
 			dao.deleteSitepages(siteName);
-
+						
 			// Submit thread to populate the url's
 			ExecutorService fillES = Executors.newFixedThreadPool(threadCount);
-			fillES.submit(new IndexerThread(urls, inurls, "http://"+siteName));
+			fillES.submit(new IndexerThread(urls, inurls, this.protocol+"://"+this.siteName));
 			
 			// Terminate the url population thread
 			fillES.shutdown();
@@ -71,5 +82,15 @@ public class SiteIndexService {
 			// TODO: handle exception
 		}
 		return success;
+	}
+	
+	private URL getURL(String url) {
+		URL u = null;
+		try {
+			u = new URL(url);
+		} catch (MalformedURLException e) {
+			log.error("error parsing url: " + url + ": "+e.getMessage(), e);
+		}
+		return u;
 	}
 }

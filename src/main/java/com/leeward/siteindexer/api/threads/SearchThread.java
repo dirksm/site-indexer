@@ -24,6 +24,8 @@ import org.jsoup.Connection.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +92,8 @@ public class SearchThread implements Runnable {
 					        	if (srm != null && StringUtils.isNotBlank(srm.getText())) {
 					        		dao.addSitepages(srm);
 								}
+					        } else {
+					        	log.error("Invalid response for url: " + url);
 					        }
 						} catch (UnsupportedMimeTypeException umte) {
 							log.error("url["+url+"]: " + umte.getMessage(), umte);
@@ -108,7 +112,16 @@ public class SearchThread implements Runnable {
 	private SitePagesModel searchPage(String url, Document htmlDocument) {
 		SitePagesModel result = null;
 		htmlDocument.select("a").remove().text();
-		String bodyText = htmlDocument.body().text();
+		String bodyText = "";
+		Elements divs = htmlDocument.select("div#content");
+		if (divs!=null && divs.size()>0) {
+			bodyText = "";
+			for (Element div : divs) {
+				bodyText += div.text() + " ";
+			}
+		} else {
+			bodyText = htmlDocument.body().text();
+		}
     	result = new SitePagesModel();
     	result.setSiteUrl(this.siteName);
     	result.setTitle(htmlDocument.title());

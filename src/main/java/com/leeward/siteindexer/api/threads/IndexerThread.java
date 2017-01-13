@@ -79,6 +79,8 @@ public class IndexerThread implements Runnable {
 		        if(resp.statusCode() == 200 && resp.contentType().contains("text/html"))
 		        {
 		        	populateURLs(htmlDocument);
+		        } else {
+		        	log.error("Invalid response while indexing url: " + url);
 		        }
 			} catch (UnsupportedMimeTypeException umte) {
 				log.error("url["+url+"]: " + umte.getMessage(), umte);
